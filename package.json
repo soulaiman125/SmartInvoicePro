@@ -1,0 +1,15 @@
+{
+  "name": "smartinvoice-pro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SmartInvoice Pro — multi-tenant SaaS invoicing platform (monorepo)",
+  "scripts": {
+    "db:generate": "npm --prefix database run generate",
+    "db:migrate": "npm --prefix database run migrate",
+    "db:seed": "npm --prefix database run seed",
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  }
+}

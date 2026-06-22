@@ -1,0 +1,549 @@
+// SmartInvoice Pro — Prisma schema
+// See ../../docs/database-design.md for the full data model rationale.
+
+// Client for the database package itself (used by the seed script).
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Client for the backend service. A single `prisma generate` populates both
+// packages' node_modules so the Express API can import @prisma/client directly.
+generator backendClient {
+  provider = "prisma-client-js"
+  output   = "../../backend/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  owner
+  admin
+  member
+  viewer
+}
+
+enum MembershipStatus {
+  active
+  invited
+  disabled
+}
+
+enum ClientType {
+  individual
+  company
+}
+
+enum DocType {
+  invoice
+  quote
+  credit_note
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  viewed
+  partially_paid
+  paid
+  overdue
+  cancelled
+}
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  declined
+  expired
+}
+
+enum PaymentMethod {
+  card
+  paypal
+  bank_transfer
+  cash
+  cheque
+  other
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+enum Gateway {
+  stripe
+  paypal
+  manual
+}
+
+// ---------- Tenancy & Identity ----------
+
+model Organization {
+  id                      String   @id @default(uuid())
+  name                    String
+  legalTaxId              String?
+  countryCode             String?  @db.Char(2)
+  baseCurrency            String   @default("USD") @db.Char(3)
+  logoUrl                 String?
+  defaultPaymentTermsDays Int      @default(30)
+  timezone                String   @default("UTC")
+  settings                Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  memberships     Membership[]
+  clients         Client[]
+  products        Product[]
+  taxRates        TaxRate[]
+  numberingSeries NumberingSeries[]
+  invoices        Invoice[]
+  quotes          Quote[]
+  payments        Payment[]
+  subscription    Subscription?
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  emailLogs       EmailLog[]
+  portalTokens    PortalToken[]
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  fullName        String?
+  isEmailVerified Boolean  @default(false)
+  totpSecret      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  memberships         Membership[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  notifications       Notification[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Membership {
+  id             String           @id @default(uuid())
+  organizationId String
+  userId         String?
+  role           Role             @default(member)
+  status         MembershipStatus @default(active)
+  invitedEmail   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+}
+
+// ---------- CRM & Catalog ----------
+
+model Client {
+  id                String     @id @default(uuid())
+  organizationId    String
+  type              ClientType @default(company)
+  name              String
+  email             String?
+  taxId             String?
+  billingAddress    Json?
+  shippingAddress   Json?
+  preferredCurrency String?    @db.Char(3)
+  preferredLanguage String?
+  notes             String?
+  archivedAt        DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices     Invoice[]
+  quotes       Quote[]
+  portalTokens PortalToken[]
+
+  @@index([organizationId])
+  @@index([organizationId, email])
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  organizationId    String
+  name              String
+  description       String?
+  sku               String?
+  imageUrl          String?
+  unitPrice         BigInt   @default(0)
+  currency          String   @db.Char(3)
+  taxRateId         String?
+  unit              String   @default("unit")
+  category          String?
+  isActive          Boolean  @default(true)
+  // Inventory
+  trackInventory    Boolean  @default(false)
+  stockQuantity     Int      @default(0)
+  lowStockThreshold Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  taxRate        TaxRate?        @relation(fields: [taxRateId], references: [id])
+  stockMovements StockMovement[]
+
+  @@index([organizationId])
+}
+
+enum StockMovementType {
+  in
+  out
+  adjustment
+}
+
+model StockMovement {
+  id             String            @id @default(uuid())
+  organizationId String
+  productId      String
+  type           StockMovementType
+  quantity       Int
+  resultingStock Int
+  reason         String?
+  reference      String?
+  createdAt      DateTime          @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, productId])
+}
+
+model TaxRate {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  rateBasisPoints Int
+  isInclusive     Boolean  @default(false)
+  countryCode     String?  @db.Char(2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     Product[]
+
+  @@index([organizationId])
+}
+
+model NumberingSeries {
+  id             String  @id @default(uuid())
+  organizationId String
+  docType        DocType
+  prefix         String
+  fiscalYear     Int
+  nextNumber     BigInt  @default(1)
+  padding        Int     @default(4)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices     Invoice[]
+
+  @@unique([organizationId, docType, fiscalYear])
+}
+
+// ---------- Billing ----------
+
+model Invoice {
+  id                   String        @id @default(uuid())
+  organizationId       String
+  clientId             String
+  number               String?
+  seriesId             String?
+  status               InvoiceStatus @default(draft)
+  issueDate            DateTime?     @db.Date
+  dueDate              DateTime?     @db.Date
+  currency             String        @db.Char(3)
+  fxRate               Decimal       @default(1) @db.Decimal(18, 8)
+  subtotal             BigInt        @default(0)
+  discountTotal        BigInt        @default(0)
+  taxTotal             BigInt        @default(0)
+  total                BigInt        @default(0)
+  amountPaid           BigInt        @default(0)
+  balanceDue           BigInt        @default(0)
+  notes                String?
+  footer               String?
+  convertedFromQuoteId String?
+  issuedAt             DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client           @relation(fields: [clientId], references: [id])
+  series       NumberingSeries? @relation(fields: [seriesId], references: [id])
+  items        InvoiceItem[]
+  payments     Payment[]
+  creditNotes  CreditNote[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status])
+  @@index([organizationId, clientId])
+  @@index([organizationId, dueDate])
+}
+
+model InvoiceItem {
+  id                  String  @id @default(uuid())
+  organizationId      String
+  invoiceId           String
+  productId           String?
+  description         String
+  quantity            Decimal @default(1) @db.Decimal(14, 4)
+  unitPrice           BigInt  @default(0)
+  taxRateBasisPoints  Int     @default(0)
+  discountBasisPoints Int     @default(0)
+  lineSubtotal        BigInt  @default(0)
+  lineTax             BigInt  @default(0)
+  lineTotal           BigInt  @default(0)
+  position            Int     @default(0)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, position])
+}
+
+model Quote {
+  id             String      @id @default(uuid())
+  organizationId String
+  clientId       String
+  number         String?
+  status         QuoteStatus @default(draft)
+  issueDate      DateTime?   @db.Date
+  validUntil     DateTime?   @db.Date
+  currency       String      @db.Char(3)
+  subtotal       BigInt      @default(0)
+  taxTotal       BigInt      @default(0)
+  total          BigInt      @default(0)
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id])
+  items        QuoteItem[]
+
+  @@index([organizationId, status])
+}
+
+model QuoteItem {
+  id                 String  @id @default(uuid())
+  organizationId     String
+  quoteId            String
+  description        String
+  quantity           Decimal @default(1) @db.Decimal(14, 4)
+  unitPrice          BigInt  @default(0)
+  taxRateBasisPoints Int     @default(0)
+  lineTotal          BigInt  @default(0)
+  position           Int     @default(0)
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId, position])
+}
+
+model CreditNote {
+  id             String   @id @default(uuid())
+  organizationId String
+  invoiceId      String
+  number         String?
+  reason         String?
+  total          BigInt   @default(0)
+  issuedAt       DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// ---------- Payments ----------
+
+model Payment {
+  id               String        @id @default(uuid())
+  organizationId   String
+  invoiceId        String
+  amount           BigInt
+  currency         String        @db.Char(3)
+  method           PaymentMethod
+  status           PaymentStatus @default(pending)
+  gateway          Gateway       @default(manual)
+  gatewayPaymentId String?
+  paidAt           DateTime?
+  reference        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id])
+
+  @@index([organizationId, invoiceId])
+  @@index([gateway, gatewayPaymentId])
+}
+
+model ProcessedWebhookEvent {
+  id          String   @id @default(uuid())
+  gateway     Gateway
+  eventId     String
+  processedAt DateTime @default(now())
+
+  @@unique([gateway, eventId])
+}
+
+// ---------- SaaS Platform ----------
+
+model Plan {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  name       String
+  priceMinor BigInt   @default(0)
+  currency   String   @default("USD") @db.Char(3)
+  limits     Json?
+  features   Json?
+  createdAt  DateTime @default(now())
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  organizationId       String    @unique
+  planId               String
+  status               String    @default("trialing")
+  stripeSubscriptionId String?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         Plan         @relation(fields: [planId], references: [id])
+}
+
+// ---------- Supporting ----------
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+}
+
+model Notification {
+  id             String    @id @default(uuid())
+  organizationId String
+  userId         String
+  type           String
+  payload        Json?
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, readAt])
+}
+
+// ---------- Email delivery (Phase 2) ----------
+
+enum EmailType {
+  invoice
+  quote
+  payment_reminder
+  invoice_paid
+  welcome
+}
+
+enum EmailStatus {
+  queued
+  sent
+  failed
+}
+
+model EmailLog {
+  id             String      @id @default(uuid())
+  organizationId String
+  toEmail        String
+  toName         String?
+  subject        String
+  type           EmailType
+  entityType     String? // 'invoice' | 'quote' | 'client' | ...
+  entityId       String?
+  status         EmailStatus @default(queued)
+  provider       String? // 'smtp' | 'preview'
+  messageId      String?
+  previewUrl     String? // Ethereal preview link when using the dev transport
+  error          String?
+  attempts       Int         @default(0)
+  lastAttemptAt  DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
+}
+
+// ---------- Customer portal (Phase 3) ----------
+
+model PortalToken {
+  id             String    @id @default(uuid())
+  organizationId String
+  clientId       String
+  tokenHash      String    @unique
+  label          String?
+  expiresAt      DateTime?
+  lastAccessedAt DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, clientId])
+}

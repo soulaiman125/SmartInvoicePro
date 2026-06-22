@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartInvoice Pro — Brand System</title>
+    <style>
+      :root {
+        --blue: #2563eb;
+        --cyan: #06b6d4;
+        --navy: #0f172a;
+        --slate: #64748b;
+        --mist: #f1f5f9;
+        font-family: Inter, 'Geist', Manrope, system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--navy); background: #fff; line-height: 1.5; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 24px 96px; }
+      header.hero { text-align: center; padding: 24px 0 8px; }
+      .kicker { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); background: #eff6ff; padding: 6px 12px; border-radius: 999px; }
+      h1 { font-size: 40px; letter-spacing: -1.2px; margin: 16px 0 4px; }
+      h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--slate); margin: 64px 0 16px; }
+      .sub { color: var(--slate); margin: 0; }
+      .grid { display: grid; gap: 20px; }
+      .cols-2 { grid-template-columns: repeat(2, 1fr); }
+      .cols-3 { grid-template-columns: repeat(3, 1fr); }
+      .cols-4 { grid-template-columns: repeat(4, 1fr); }
+      @media (max-width: 760px) { .cols-2,.cols-3,.cols-4 { grid-template-columns: 1fr 1fr; } h1{font-size:30px;} }
+      .card { border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; background: #fff; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; justify-content: center; }
+      .card.center { align-items: center; text-align: center; }
+      .card .label { font-size: 12px; color: var(--slate); font-weight: 600; }
+      .dark { background: var(--navy); color: #fff; }
+      .dark .label { color: #94a3b8; }
+      .swatch { height: 88px; border-radius: 12px; display: flex; align-items: flex-end; padding: 10px; color: #fff; font-size: 12px; font-weight: 600; }
+      .mono { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--slate); }
+      .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+      .browser { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+      .tabbar { background: #f8fafc; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
+      .tab { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+      .navbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 12px; }
+      .grid-overlay { position: relative; }
+      .grid-overlay svg { display: block; }
+      footer { margin-top: 80px; color: var(--slate); font-size: 13px; text-align: center; }
+      .sizes { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+      .sizes figure { margin: 0; text-align: center; }
+      .sizes figcaption { font-size: 11px; color: var(--slate); margin-top: 6px; }
+      .type-row { display:flex; align-items: baseline; gap: 16px; border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
+      .type-row span.meta { font-size: 12px; color: var(--slate); width: 120px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <span class="kicker">SmartInvoice Pro — Brand System</span>
+        <h1>A logo built like a $100M SaaS.</h1>
+        <p class="sub">Ultra-minimal geometric mark · S monogram · growth arrow · invoice document.</p>
+      </header>
+
+      <!-- Before / After -->
+      <h2>Before vs After</h2>
+      <div class="grid cols-2">
+        <div class="card center">
+          <span class="label">BEFORE — busy, low contrast, blurs small</span>
+          <svg width="120" height="120" viewBox="0 0 48 48" fill="none">
+            <rect x="7" y="9" width="30" height="30" rx="3" fill="#0F172A" opacity="0.12"/>
+            <path d="M33 14C30 9 18 8 13 13C8 18 14 23 22 25C31 27 36 30 31 36C27 40 17 40 12 35" stroke="#1D4ED8" stroke-width="7"/>
+            <path d="M14 30 L40 6 M30 6 H42 V18" stroke="#22D3EE" stroke-width="5"/>
+            <path d="M22 31 H34 M22 35 H30" stroke="#0F172A" stroke-width="2.5"/>
+          </svg>
+          <span class="mono">Overlapping strokes · clashing arrow · 3 weights</span>
+        </div>
+        <div class="card center">
+          <span class="label">AFTER — minimal, balanced, scalable</span>
+          <img src="./icon.svg" width="120" height="120" alt="New icon" />
+          <span class="mono">One S · one arrow · one document plane</span>
+        </div>
+      </div>
+
+      <!-- Logo system -->
+      <h2>Logo System</h2>
+      <div class="grid cols-2">
+        <div class="card"><span class="label">PRIMARY (with tagline)</span><img src="./logo-primary.svg" height="64" alt="Primary logo" /></div>
+        <div class="card"><span class="label">HORIZONTAL</span><img src="./logo-horizontal.svg" height="48" alt="Horizontal logo" /></div>
+        <div class="card center"><span class="label">VERTICAL</span><img src="./logo-vertical.svg" height="130" alt="Vertical logo" /></div>
+        <div class="card dark"><span class="label">DARK MODE</span><img src="./logo-dark.svg" height="48" alt="Dark logo" /></div>
+        <div class="card"><span class="label">LIGHT MODE</span><img src="./logo-light.svg" height="48" alt="Light logo" /></div>
+        <div class="card"><span class="label">MONOCHROME</span><img src="./logo-mono.svg" height="48" alt="Monochrome logo" /></div>
+      </div>
+
+      <!-- Icon / app / favicon -->
+      <h2>Icon · App · Favicon</h2>
+      <div class="grid cols-3">
+        <div class="card center"><span class="label">ICON ONLY</span><img src="./icon.svg" width="96" height="96" alt="Icon" /></div>
+        <div class="card center"><span class="label">APP ICON</span><img src="./app-icon.svg" width="96" height="96" alt="App icon" style="border-radius:22px" /></div>
+        <div class="card center"><span class="label">MONOCHROME ICON</span><span style="color:#0F172A"><img src="./icon-mono.svg" width="96" height="96" alt="Mono icon" /></span></div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <span class="label">FAVICON / SMALL SIZES (renders crisp down to 16px)</span>
+        <div class="sizes">
+          <figure><img src="./favicon.svg" width="64" height="64" style="border-radius:14px" alt="64"><figcaption>64</figcaption></figure>
+          <figure><img src="./favicon.svg" width="48" height="48" style="border-radius:11px" alt="48"><figcaption>48</figcaption></figure>
+          <figure><img src="./favicon.svg" width="32" height="32" style="border-radius:7px" alt="32"><figcaption>32</figcaption></figure>
+          <figure><img src="./favicon.svg" width="24" height="24" style="border-radius:5px" alt="24"><figcaption>24</figcaption></figure>
+          <figure><img src="./favicon.svg" width="16" height="16" style="border-radius:4px" alt="16"><figcaption>16</figcaption></figure>
+        </div>
+      </div>
+
+      <!-- Grid & safe space -->
+      <h2>Grid System &amp; Safe Spacing</h2>
+      <div class="grid cols-2">
+        <div class="card center">
+          <span class="label">48 UNIT CONSTRUCTION GRID</span>
+          <svg width="240" height="240" viewBox="0 0 48 48">
+            <g stroke="#e5e7eb" stroke-width="0.3">
+              <path d="M8 0V48M16 0V48M24 0V48M32 0V48M40 0V48M0 8H48M0 16H48M0 24H48M0 32H48M0 40H48"/>
+            </g>
+            <circle cx="24" cy="24" r="16" fill="none" stroke="#06b6d4" stroke-width="0.3" stroke-dasharray="1 1"/>
+            <use href="#mk" />
+            <g id="mk">
+              <rect x="11" y="9" width="26" height="30" rx="6" fill="#2563EB" opacity="0.08"/>
+              <path d="M34.2 17.4C34.2 13.6 30.2 12 24 12C17.8 12 13.8 14.2 13.8 17.9C13.8 21.3 17 22.9 24 23.9C31 24.9 34.2 26.7 34.2 30.2C34.2 34 30.1 35.8 24 35.8C18.2 35.8 14.2 34.2 13.4 31" stroke="#2563EB" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M29.5 20L38.6 11M33.8 10.8H39V16" stroke="#06B6D4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </svg>
+        </div>
+        <div class="card center">
+          <span class="label">CLEAR SPACE = HEIGHT OF THE “S”</span>
+          <svg width="240" height="240" viewBox="0 0 48 48">
+            <rect x="6" y="6" width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="0.4" stroke-dasharray="1.5 1.5"/>
+            <rect x="11" y="9" width="26" height="30" rx="6" fill="#2563EB" opacity="0.08"/>
+            <path d="M34.2 17.4C34.2 13.6 30.2 12 24 12C17.8 12 13.8 14.2 13.8 17.9C13.8 21.3 17 22.9 24 23.9C31 24.9 34.2 26.7 34.2 30.2C34.2 34 30.1 35.8 24 35.8C18.2 35.8 14.2 34.2 13.4 31" stroke="#2563EB" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M29.5 20L38.6 11M33.8 10.8H39V16" stroke="#06B6D4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Palette -->
+      <h2>Color Palette</h2>
+      <div class="grid cols-4">
+        <div><div class="swatch" style="background:#2563EB">Primary Blue</div><div class="mono">#2563EB</div></div>
+        <div><div class="swatch" style="background:#06B6D4">Accent Cyan</div><div class="mono">#06B6D4</div></div>
+        <div><div class="swatch" style="background:#0F172A">Dark Navy</div><div class="mono">#0F172A</div></div>
+        <div><div class="swatch" style="background:#64748B">Slate</div><div class="mono">#64748B</div></div>
+      </div>
+
+      <!-- Typography -->
+      <h2>Typography System</h2>
+      <div class="card" style="width:100%">
+        <div class="type-row"><span class="meta">Wordmark · 700</span><span style="font-size:30px;font-weight:700;letter-spacing:-1px">SmartInvoice <span style="color:#2563EB">Pro</span></span></div>
+        <div class="type-row"><span class="meta">Heading · 600</span><span style="font-size:22px;font-weight:600;letter-spacing:-.4px">Smart Billing. Better Business.</span></div>
+        <div class="type-row"><span class="meta">Body · 400</span><span style="font-size:15px">Inter / Geist / Manrope — clean, modern, neutral grotesque for premium SaaS.</span></div>
+        <div class="type-row"><span class="meta">Caption · 500</span><span style="font-size:12px;color:#64748b;font-weight:500;letter-spacing:.4px">TABULAR NUMERALS · 1,248.00</span></div>
+      </div>
+
+      <!-- Usage -->
+      <h2>Logo Usage Examples</h2>
+      <div class="grid cols-2">
+        <div class="card"><span class="label">WEBSITE NAVBAR</span>
+          <div class="navbar" style="width:100%"><img src="./logo-horizontal.svg" height="32" alt=""><span class="chip">Sign in</span></div>
+        </div>
+        <div class="card"><span class="label">BROWSER TAB</span>
+          <div class="browser" style="width:100%"><div class="tabbar"><span class="tab"><img src="./favicon.svg" width="16" height="16" alt="">SmartInvoice Pro</span></div></div>
+        </div>
+        <div class="card dark"><span class="label">DASHBOARD SIDEBAR (dark)</span>
+          <div style="display:flex;align-items:center;gap:10px"><img src="./icon.svg" width="28" height="28" alt=""><strong style="color:#fff">SmartInvoice <span style="color:#22D3EE">Pro</span></strong></div>
+        </div>
+        <div class="card center"><span class="label">MOBILE APP</span>
+          <img src="./app-icon.svg" width="72" height="72" style="border-radius:16px" alt="">
+        </div>
+      </div>
+
+      <footer>
+        SmartInvoice Pro · Brand System v2 · Colours #2563EB / #06B6D4 / #0F172A · Inter / Geist / Manrope<br>
+        SVG assets in <code>/brand</code>. For distribution, outline the wordmark fonts to paths.
+      </footer>
+    </div>
+  </body>
+</html>

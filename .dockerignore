@@ -1,0 +1,10 @@
+# Root build context (backend image uses repo root).
+**/node_modules
+**/dist
+**/.env
+**/.env.*.local
+**/*.log
+.git
+docs
+frontend
+**/.DS_Store

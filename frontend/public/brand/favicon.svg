@@ -1,0 +1,14 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SmartInvoice Pro">
+  <defs>
+    <linearGradient id="fv" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <!-- Simplified for favicon legibility: tile + bold S + arrow, no fine detail -->
+  <rect width="48" height="48" rx="11" fill="url(#fv)"/>
+  <path d="M33.8 18C33.8 14 30 12.2 24 12.2C18 12.2 14.2 14.4 14.2 18C14.2 21.4 17.4 23 24 24C30.6 25 33.8 26.8 33.8 30.2C33.8 33.9 29.8 35.8 24 35.8C18.2 35.8 14.4 34.1 13.6 30.6"
+        stroke="#FFFFFF" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 19.5L39 11M34 10.8H39.2V16"
+        stroke="#22D3EE" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
