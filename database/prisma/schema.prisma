@@ -112,6 +112,7 @@ model Organization {
   notifications   Notification[]
   emailLogs       EmailLog[]
   portalTokens    PortalToken[]
+  expenses        Expense[]
 }
 
 model User {
@@ -546,4 +547,27 @@ model PortalToken {
   client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, clientId])
+}
+
+// ---------- Expense management (Phase 6) ----------
+
+model Expense {
+  id             String   @id @default(uuid())
+  organizationId String
+  category       String
+  vendor         String?
+  description    String?
+  amount         BigInt // minor units (e.g. cents)
+  taxAmount      BigInt   @default(0)
+  currency       String   @default("USD")
+  date           DateTime @db.Date
+  reference      String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, date])
+  @@index([organizationId, category])
 }

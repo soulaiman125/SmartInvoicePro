@@ -34,6 +34,7 @@ const Quotes = lazy(() => import('./pages/Quotes.jsx'));
 const QuoteForm = lazy(() => import('./pages/QuoteForm.jsx'));
 const QuoteDetails = lazy(() => import('./pages/QuoteDetails.jsx'));
 const Payments = lazy(() => import('./pages/Payments.jsx'));
+const Expenses = lazy(() => import('./pages/Expenses.jsx'));
 const Reports = lazy(() => import('./pages/Reports.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
 const Portal = lazy(() => import('./pages/Portal.jsx'));
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/quotes/:id" element={<QuoteDetails />} />
             <Route path="/quotes/:id/edit" element={<QuoteForm />} />
             <Route path="/payments" element={<Payments />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

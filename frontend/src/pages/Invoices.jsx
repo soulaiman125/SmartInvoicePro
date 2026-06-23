@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from '../hooks/useInvoices.js';
+import useDebouncedValue from '../hooks/useDebouncedValue.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import DataTable, { Pagination } from '../components/ui/DataTable.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -14,11 +15,16 @@ const STATUSES = ['', 'draft', 'sent', 'partially_paid', 'paid', 'overdue', 'can
 export default function Invoices() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('');
+  const [search, setSearch] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = useInvoices({ status, page, pageSize: 10 });
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data, isLoading, isError } = useInvoices({ status, search: debouncedSearch, from, to, page, pageSize: 10 });
 
   const invoices = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
+  const filtering = Boolean(status || debouncedSearch || from || to);
 
   const columns = [
     { key: 'number', header: 'Number', sortable: true, exportValue: (r) => r.number || 'Draft', render: (r) => <span className="font-medium text-brand-600">{r.number || 'Draft'}</span> },
@@ -45,22 +51,52 @@ export default function Invoices() {
         exportName="invoices"
         onRowClick={(r) => navigate(`/invoices/${r.id}`)}
         toolbar={
-          <select
-            value={status}
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            className="field-input w-auto cursor-pointer"
-          >
-            {STATUSES.map((s) => <option key={s} value={s}>{s ? s.replace('_', ' ') : 'All statuses'}</option>)}
-          </select>
+          <>
+            <div className="relative w-full max-w-xs">
+              <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <input
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search number or client…"
+                className="field-input pl-9"
+              />
+            </div>
+            <select
+              value={status}
+              onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+              className="field-input w-auto cursor-pointer"
+            >
+              {STATUSES.map((s) => <option key={s} value={s}>{s ? s.replace('_', ' ') : 'All statuses'}</option>)}
+            </select>
+            <input
+              type="date"
+              aria-label="Issued from"
+              value={from}
+              onChange={(e) => { setFrom(e.target.value); setPage(1); }}
+              className="field-input w-auto cursor-pointer"
+            />
+            <input
+              type="date"
+              aria-label="Issued to"
+              value={to}
+              onChange={(e) => { setTo(e.target.value); setPage(1); }}
+              className="field-input w-auto cursor-pointer"
+            />
+            {filtering && (
+              <Button variant="ghost" size="sm" onClick={() => { setStatus(''); setSearch(''); setFrom(''); setTo(''); setPage(1); }}>
+                Clear
+              </Button>
+            )}
+          </>
         }
         emptyState={
           <EmptyState
             bare
             icon="🧾"
-            title={status ? 'No invoices with this status' : 'No invoices yet'}
-            description={status ? 'Try a different status filter.' : 'Create your first invoice to get paid.'}
-            actionLabel={status ? undefined : 'New invoice'}
-            onAction={status ? undefined : () => navigate('/invoices/new')}
+            title={filtering ? 'No matching invoices' : 'No invoices yet'}
+            description={filtering ? 'Try adjusting your search, status or date filters.' : 'Create your first invoice to get paid.'}
+            actionLabel={filtering ? undefined : 'New invoice'}
+            onAction={filtering ? undefined : () => navigate('/invoices/new')}
           />
         }
       />

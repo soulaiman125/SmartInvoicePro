@@ -16,6 +16,7 @@ export async function getDashboardSummary(organizationId) {
     invoiceGroups,
     lowStock,
     recentInvoices,
+    expensesAgg,
   ] = await Promise.all([
     prisma.payment.aggregate({
       where: { organizationId, status: 'succeeded' },
@@ -44,6 +45,10 @@ export async function getDashboardSummary(organizationId) {
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
+    prisma.expense.aggregate({
+      where: { organizationId },
+      _sum: { amount: true, taxAmount: true },
+    }),
   ]);
 
   const invoicesByStatus = invoiceGroups.reduce((acc, g) => {
@@ -53,9 +58,14 @@ export async function getDashboardSummary(organizationId) {
   const invoiceCount = invoiceGroups.reduce((n, g) => n + g._count._all, 0);
   const lowStockItems = lowStock.filter((p) => p.stockQuantity <= p.lowStockThreshold);
 
+  const revenue = sumOf(revenueAgg, 'amount');
+  const expenses = sumOf(expensesAgg, 'amount') + sumOf(expensesAgg, 'taxAmount');
+
   return {
-    revenue: sumOf(revenueAgg, 'amount'),
+    revenue,
     outstanding: sumOf(outstandingAgg, 'balanceDue'),
+    expenses,
+    profit: revenue - expenses,
     counts: {
       clients,
       products,

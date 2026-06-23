@@ -13,6 +13,7 @@ import settingsRoutes from './settings.routes.js';
 import emailRoutes from './email.routes.js';
 import portalRoutes from './portal.routes.js';
 import reportRoutes from './report.routes.js';
+import expenseRoutes from './expense.routes.js';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/settings', settingsRoutes);
 router.use('/emails', emailRoutes);
 router.use('/portal', portalRoutes);
 router.use('/reports', reportRoutes);
+router.use('/expenses', expenseRoutes);
 
 export default router;

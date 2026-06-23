@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import qrImage from 'qr-image';
+import { env } from '../config/env.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SmartInvoice Pro — Premium PDF engine
@@ -355,6 +357,24 @@ function drawNotes(doc, t, y, { title, body }) {
   return y + 14 + doc.heightOfString(body, { width: 250 }) + 10;
 }
 
+// Bottom-left QR code that links to the online invoice (or encodes its key
+// details when no app URL is configured). Non-critical: skipped on any error.
+function drawInvoiceQr(doc, t, invoice) {
+  try {
+    const payload = env.appUrl
+      ? `${env.appUrl}/invoices/${invoice.id}`
+      : `INVOICE ${invoice.number || ''} · ${money(invoice.total, invoice.currency)} · due ${fmtDate(invoice.dueDate)}`;
+    const png = qrImage.imageSync(payload, { type: 'png', margin: 1, ec_level: 'M' });
+    const size = 60;
+    const qy = FOOTER_TOP - size - 24;
+    doc.image(png, LEFT, qy, { width: size, height: size });
+    doc.fillColor(t.muted).font(t.fonts.regular).fontSize(7.5)
+      .text('Scan to view invoice', LEFT, qy + size + 4, { width: size + 36 });
+  } catch {
+    /* QR is a nice-to-have; never block PDF generation on it */
+  }
+}
+
 function drawAcceptance(doc, t, y) {
   doc.fillColor(t.muted).font(t.fonts.bold).fontSize(8.5).text('ACCEPTANCE', LEFT, y, { characterSpacing: 0.6 });
   doc.fillColor(t.ink).font(t.fonts.regular).fontSize(9).text(
@@ -438,6 +458,7 @@ export function buildInvoicePdf(invoice, org, options = {}) {
 
   if (invoice.notes) drawNotes(doc, t, afterSummary, { title: 'NOTES', body: invoice.notes });
 
+  drawInvoiceQr(doc, t, invoice);
   drawFooters(doc, t, org, footer);
   return doc;
 }

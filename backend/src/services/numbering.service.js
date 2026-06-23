@@ -6,8 +6,27 @@ const PREFIXES = {
   credit_note: 'CN',
 };
 
+// Maps a document type to its organization-settings prefix override key.
+const PREFIX_SETTING = { invoice: 'invoicePrefix', quote: 'quotePrefix' };
+
 export async function assignNumber(tx, organizationId, docType, date = new Date()) {
   const fiscalYear = date.getFullYear();
+
+  // Allow the organization to override the document prefix (Settings → Branding).
+  // Only applies when a new series is created — already-issued documents keep
+  // their original prefix for numbering continuity.
+  let prefixBase = PREFIXES[docType] || 'DOC';
+  const settingKey = PREFIX_SETTING[docType];
+  if (settingKey) {
+    const org = await tx.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    const custom = org?.settings?.[settingKey];
+    if (typeof custom === 'string' && custom.trim()) {
+      prefixBase = custom.trim().replace(/[^A-Za-z0-9]/g, '').toUpperCase() || prefixBase;
+    }
+  }
 
   const series = await tx.numberingSeries.upsert({
     where: {
@@ -17,7 +36,7 @@ export async function assignNumber(tx, organizationId, docType, date = new Date(
       organizationId,
       docType,
       fiscalYear,
-      prefix: `${PREFIXES[docType] || 'DOC'}-${fiscalYear}-`,
+      prefix: `${prefixBase}-${fiscalYear}-`,
       nextNumber: 1n,
       padding: 4,
     },

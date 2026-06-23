@@ -6,6 +6,9 @@ import {
   Area,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -35,6 +38,16 @@ const stagger = {
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const STATUS_COLORS = {
+  draft: '#94a3b8',
+  sent: '#3563e9',
+  viewed: '#7c3aed',
+  partially_paid: '#d97706',
+  paid: '#059669',
+  overdue: '#dc2626',
+  cancelled: '#64748b',
 };
 
 const TONES = {
@@ -192,6 +205,8 @@ export default function Dashboard() {
   const chartRevenue = monthly.map((m) => ({ month: m.month.slice(5), revenue: m.revenue / 100 }));
   const chartPerf = performance.map((p) => ({ name: p.name, revenue: p.revenue / 100 }));
   const topClients = clientReport.slice(0, 5);
+  const statusData = Object.entries(data.invoicesByStatus || {}).map(([name, v]) => ({ name, value: v.count }));
+  const clientBars = clientReport.slice(0, 6).map((cl) => ({ name: cl.name, billed: cl.billed / 100 }));
   const events = activity?.data ?? [];
 
   // Derive a month-over-month revenue trend from the series we already have.
@@ -233,6 +248,25 @@ export default function Dashboard() {
           <KpiCard label="Invoices" count={c.invoices} icon="invoices" tone="violet" to="/invoices" />
         </motion.div>
       </motion.div>
+
+      <Panel title="Profit analytics" className="mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-sm text-ink-500 dark:text-ink-400">Revenue</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{formatMoney(data.revenue)}</p>
+          </div>
+          <div className="sm:border-l sm:border-ink-100 sm:pl-4 dark:sm:border-ink-800">
+            <p className="text-sm text-ink-500 dark:text-ink-400">Expenses</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-amber-600 dark:text-amber-400">{formatMoney(data.expenses || 0)}</p>
+          </div>
+          <div className="sm:border-l sm:border-ink-100 sm:pl-4 dark:sm:border-ink-800">
+            <p className="text-sm text-ink-500 dark:text-ink-400">Net profit</p>
+            <p className={`mt-1 text-xl font-bold tabular-nums ${(data.profit || 0) >= 0 ? 'text-ink-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
+              {formatMoney(data.profit || 0)}
+            </p>
+          </div>
+        </div>
+      </Panel>
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MiniStat label="Products" value={c.products} icon="products" />
@@ -286,6 +320,51 @@ export default function Dashboard() {
             </ResponsiveContainer>
           )}
         </Panel>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel title="Invoice status">
+          {statusData.length === 0 ? (
+            <p className="py-16 text-center text-sm text-ink-400">No invoices yet.</p>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={210}>
+                <PieChart>
+                  <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={82} paddingAngle={2} stroke="none">
+                    {statusData.map((s) => <Cell key={s.name} fill={STATUS_COLORS[s.name] || '#94a3b8'} />)}
+                  </Pie>
+                  <Tooltip content={<ChartTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <ul className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                {statusData.map((s) => (
+                  <li key={s.name} className="flex items-center gap-1.5 text-ink-500">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: STATUS_COLORS[s.name] || '#94a3b8' }} />
+                    <span className="capitalize">{s.name.replace('_', ' ')}</span>
+                    <span className="ml-auto font-medium tabular-nums text-ink-700 dark:text-ink-300">{s.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Panel>
+        <div className="lg:col-span-2">
+          <Panel title="Top clients by revenue" action={<Link to="/clients" className="text-xs font-medium text-brand-600 hover:underline">View all</Link>}>
+            {clientBars.length === 0 ? (
+              <p className="py-16 text-center text-sm text-ink-400">No billing data yet.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={clientBars} layout="vertical" margin={{ left: 12, right: 8 }}>
+                  <CartesianGrid horizontal={false} stroke={axisColor} strokeOpacity={0.15} />
+                  <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} stroke={axisColor} />
+                  <YAxis type="category" dataKey="name" width={120} fontSize={11} tickLine={false} axisLine={false} stroke={axisColor} />
+                  <Tooltip content={<ChartTooltip prefix="$" />} cursor={{ fill: barColor, fillOpacity: 0.08 }} />
+                  <Bar dataKey="billed" fill={barColor} radius={[0, 6, 6, 0]} barSize={16} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Panel>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

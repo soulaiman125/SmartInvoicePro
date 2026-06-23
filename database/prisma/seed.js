@@ -80,6 +80,7 @@ async function cleanOrg() {
   await prisma.numberingSeries.deleteMany({ where: org });
   await prisma.client.deleteMany({ where: org });
   await prisma.subscription.deleteMany({ where: org });
+  await prisma.expense.deleteMany({ where: org });
 }
 
 async function main() {
@@ -522,6 +523,41 @@ async function main() {
   for (const c of clientRecords.slice(0, 5)) {
     auditLogs.push({ organizationId: org.id, actorUserId: user.id, action: 'client.created', entityType: 'client', entityId: c.id, metadata: { name: c.name }, createdAt: c.createdAt });
   }
+
+  // ---- Expenses (so profit analytics & financial reports have real data) ----
+  const EXPENSE_CATEGORIES = [
+    { category: 'Software', vendors: ['Figma', 'GitHub', 'Vercel', 'AWS'], min: 2900, max: 49900 },
+    { category: 'Office', vendors: ['WeWork', 'Staples'], min: 5000, max: 180000 },
+    { category: 'Marketing', vendors: ['Google Ads', 'Meta', 'Mailchimp'], min: 10000, max: 250000 },
+    { category: 'Payroll', vendors: ['Gusto'], min: 400000, max: 900000 },
+    { category: 'Travel', vendors: ['Delta', 'Uber', 'Marriott'], min: 8000, max: 220000 },
+    { category: 'Utilities', vendors: ['Comcast', 'PG&E'], min: 6000, max: 40000 },
+    { category: 'Equipment', vendors: ['Apple', 'Dell'], min: 50000, max: 350000 },
+    { category: 'Professional fees', vendors: ['Baker Legal', 'Ernst Accounting'], min: 30000, max: 200000 },
+  ];
+  const expenseRows = [];
+  // 2–4 expenses per month across the last 12 months.
+  for (let m = 11; m >= 0; m -= 1) {
+    const count = randint(2, 4);
+    for (let i = 0; i < count; i += 1) {
+      const cat = pick(EXPENSE_CATEGORIES);
+      const amount = randint(cat.min, cat.max);
+      const date = dateMonthsAgo(m, randint(1, 27));
+      expenseRows.push({
+        organizationId: org.id,
+        category: cat.category,
+        vendor: pick(cat.vendors),
+        description: `${cat.category} — ${pick(['monthly', 'one-off', 'quarterly', 'recurring'])}`,
+        amount: BigInt(amount),
+        taxAmount: BigInt(Math.round(amount * 0.1)),
+        currency: 'USD',
+        date,
+        createdAt: date,
+        updatedAt: date,
+      });
+    }
+  }
+  await prisma.expense.createMany({ data: expenseRows });
 
   // ---- Persist notifications + audit logs ----
   await prisma.notification.createMany({ data: notifications });

@@ -17,6 +17,7 @@ export default function CommandPalette() {
     () => [
       { id: 'dash', label: 'Go to Dashboard', icon: 'dashboard', hint: 'G D', run: () => navigate('/dashboard') },
       { id: 'reports', label: 'Go to Reports', icon: 'bar-chart', run: () => navigate('/reports') },
+      { id: 'expenses', label: 'Go to Expenses', icon: 'wallet', run: () => navigate('/expenses') },
       { id: 'clients', label: 'Go to Clients', icon: 'clients', run: () => navigate('/clients') },
       { id: 'products', label: 'Go to Products', icon: 'products', run: () => navigate('/products') },
       { id: 'inventory', label: 'Go to Inventory', icon: 'inventory', run: () => navigate('/inventory') },

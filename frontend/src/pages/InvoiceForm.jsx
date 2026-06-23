@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import FormError from "../components/ui/FormError.jsx";
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useClients } from '../hooks/useClients.js';
+import { useSettings } from '../hooks/useSettings.js';
 import { useInvoice, useCreateInvoice, useUpdateInvoice } from '../hooks/useInvoices.js';
 import { previewTotals, formatMoney, toMinorUnits, toMajorUnits } from '../utils/money.js';
 import Button from '../components/ui/Button.jsx';
@@ -18,6 +19,7 @@ export default function InvoiceForm() {
   const navigate = useNavigate();
 
   const { data: clientsPage } = useClients({ pageSize: 100 });
+  const { data: org } = useSettings();
   const { data: existing } = useInvoice(id);
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
@@ -26,6 +28,9 @@ export default function InvoiceForm() {
   const [lines, setLines] = useState([{ ...blankLine }]);
   const [error, setError] = useState(null);
   const [hydrated, setHydrated] = useState(false);
+
+  // Organization defaults (base currency + default tax) applied to new invoices.
+  const defaultTaxPercent = org?.settings?.defaultTaxBps != null ? org.settings.defaultTaxBps / 100 : 0;
 
   // Hydrate the form once when editing an existing invoice.
   if (isEdit && existing && !hydrated) {
@@ -48,6 +53,13 @@ export default function InvoiceForm() {
     setHydrated(true);
   }
 
+  // Apply org defaults once for a brand-new invoice (currency + default tax).
+  if (!isEdit && org && !hydrated) {
+    setForm((s) => ({ ...s, currency: org.baseCurrency || s.currency }));
+    setLines((ls) => ls.map((l, i) => (i === 0 ? { ...l, taxPercent: defaultTaxPercent } : l)));
+    setHydrated(true);
+  }
+
   const clients = clientsPage?.data ?? [];
   const totals = useMemo(() => previewTotals(lines), [lines]);
   const saving = createInvoice.isPending || updateInvoice.isPending;
@@ -56,7 +68,7 @@ export default function InvoiceForm() {
   const updateField = (f) => (e) => setForm((s) => ({ ...s, [f]: e.target.value }));
   const updateLine = (i, f) => (e) =>
     setLines((ls) => ls.map((l, idx) => (idx === i ? { ...l, [f]: e.target.value } : l)));
-  const addLine = () => setLines((ls) => [...ls, { ...blankLine }]);
+  const addLine = () => setLines((ls) => [...ls, { ...blankLine, taxPercent: defaultTaxPercent }]);
   const removeLine = (i) => setLines((ls) => (ls.length > 1 ? ls.filter((_, idx) => idx !== i) : ls));
 
   const onSubmit = async (e) => {

@@ -1,8 +1,16 @@
 import api from './api.js';
 
-export async function listInvoices({ status = '', clientId = '', page = 1, pageSize = 10 } = {}) {
+export async function listInvoices({ status = '', clientId = '', search = '', from = '', to = '', page = 1, pageSize = 10 } = {}) {
   const { data } = await api.get('/invoices', {
-    params: { status: status || undefined, clientId: clientId || undefined, page, pageSize },
+    params: {
+      status: status || undefined,
+      clientId: clientId || undefined,
+      search: search || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      page,
+      pageSize,
+    },
   });
   return data;
 }

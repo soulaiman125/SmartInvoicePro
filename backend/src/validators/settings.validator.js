@@ -18,7 +18,8 @@ export const updateSettingsSchema = {
       legalTaxId: z.string().max(60).optional(),
       countryCode: z.string().length(2).optional(),
       baseCurrency: z.string().length(3).toUpperCase().optional(),
-      logoUrl: z.string().max(2000).optional(),
+      // Allows either a hosted URL or an embedded base64 data URI (logo upload).
+      logoUrl: z.string().max(3_000_000).optional(),
       address: addressSchema.optional(),
       defaultPaymentTermsDays: z.coerce.number().int().min(0).max(365).optional(),
       timezone: z.string().max(60).optional(),

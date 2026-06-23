@@ -18,6 +18,25 @@ export async function listInvoices(organizationId, query) {
   if (query.status) where.status = query.status;
   if (query.clientId) where.clientId = query.clientId;
 
+  // Free-text search across invoice number and client name.
+  if (query.search) {
+    where.OR = [
+      { number: { contains: query.search, mode: 'insensitive' } },
+      { client: { name: { contains: query.search, mode: 'insensitive' } } },
+    ];
+  }
+
+  // Issue-date range filter (inclusive). Either bound is optional.
+  if (query.from || query.to) {
+    where.issueDate = {};
+    if (query.from) where.issueDate.gte = new Date(query.from);
+    if (query.to) {
+      const to = new Date(query.to);
+      to.setHours(23, 59, 59, 999);
+      where.issueDate.lte = to;
+    }
+  }
+
   const [data, total] = await Promise.all([
     prisma.invoice.findMany({
       where,

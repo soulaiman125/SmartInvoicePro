@@ -5,6 +5,7 @@ import { toCsv, toXlsx, toPdf } from '../services/export.service.js';
 import { getSettings } from '../services/settings.service.js';
 
 const AVAILABLE = [
+  { key: 'financial', title: 'Revenue vs Expenses', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: true },
   { key: 'revenue', title: 'Revenue Report', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: true },
   { key: 'clients', title: 'Client Report', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: false },
   { key: 'products', title: 'Product Performance', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: false },

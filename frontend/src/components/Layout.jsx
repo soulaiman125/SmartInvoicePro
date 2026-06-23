@@ -29,6 +29,7 @@ const NAV = [
       { to: '/invoices', label: 'Invoices', icon: 'invoices' },
       { to: '/quotes', label: 'Quotes', icon: 'quotes' },
       { to: '/payments', label: 'Payments', icon: 'payments' },
+      { to: '/expenses', label: 'Expenses', icon: 'wallet' },
       { to: '/reports', label: 'Reports', icon: 'bar-chart' },
     ],
   },

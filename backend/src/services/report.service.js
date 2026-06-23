@@ -227,7 +227,65 @@ export async function paymentsReport(organizationId, query) {
   };
 }
 
+// ── Financial: revenue vs expenses, profit (monthly) ─────────────────────────
+export async function financialReport(organizationId, query) {
+  const { from, to } = parseRange(query);
+  const currency = await currencyFor(organizationId);
+
+  const [payments, expenses] = await Promise.all([
+    prisma.payment.findMany({
+      where: { organizationId, status: 'succeeded', paidAt: { gte: from, lte: to } },
+      select: { amount: true, paidAt: true },
+    }),
+    prisma.expense.findMany({
+      where: { organizationId, date: { gte: from, lte: to } },
+      select: { amount: true, taxAmount: true, date: true },
+    }),
+  ]);
+
+  const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const buckets = new Map();
+  const cursor = new Date(from);
+  while (cursor <= to) {
+    buckets.set(key(cursor), { revenue: 0, expenses: 0 });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  for (const p of payments) {
+    const b = buckets.get(key(new Date(p.paidAt)));
+    if (b) b.revenue += num(p.amount);
+  }
+  for (const e of expenses) {
+    const b = buckets.get(key(new Date(e.date)));
+    if (b) b.expenses += num(e.amount) + num(e.taxAmount);
+  }
+
+  const rows = Array.from(buckets, ([month, b]) => ({
+    month,
+    revenue: b.revenue,
+    expenses: b.expenses,
+    profit: b.revenue - b.expenses,
+  }));
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  const totalExpenses = rows.reduce((s, r) => s + r.expenses, 0);
+
+  return {
+    key: 'financial',
+    title: 'Revenue vs Expenses',
+    currency,
+    columns: [
+      { key: 'month', label: 'Month', type: 'text' },
+      { key: 'revenue', label: 'Revenue', type: 'money' },
+      { key: 'expenses', label: 'Expenses', type: 'money' },
+      { key: 'profit', label: 'Profit', type: 'money' },
+    ],
+    rows,
+    summary: [{ month: 'Total', revenue: totalRevenue, expenses: totalExpenses, profit: totalRevenue - totalExpenses }],
+    meta: { from, to },
+  };
+}
+
 export const REPORTS = {
+  financial: financialReport,
   revenue: revenueReport,
   clients: clientReport,
   products: productReport,
