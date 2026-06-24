@@ -35,6 +35,9 @@ export default function Settings() {
       quotePrefix: org.settings?.quotePrefix || 'QUO',
       brandColor: org.settings?.brandColor || '#3563e9',
       defaultTaxPercent: org.settings?.defaultTaxBps != null ? String(org.settings.defaultTaxBps / 100) : '',
+      companyPhone: org.settings?.companyPhone || '',
+      companyEmail: org.settings?.companyEmail || '',
+      companyWebsite: org.settings?.companyWebsite || '',
     });
   }
 
@@ -69,6 +72,9 @@ export default function Settings() {
       invoicePrefix: (form.invoicePrefix || 'INV').toUpperCase(),
       quotePrefix: (form.quotePrefix || 'QUO').toUpperCase(),
       brandColor: form.brandColor || '#3563e9',
+      companyPhone: form.companyPhone.trim(),
+      companyEmail: form.companyEmail.trim(),
+      companyWebsite: form.companyWebsite.trim(),
     };
     if (form.defaultTaxPercent !== '' && !Number.isNaN(Number(form.defaultTaxPercent))) {
       settings.defaultTaxBps = Math.round(Number(form.defaultTaxPercent) * 100);
@@ -133,6 +139,16 @@ export default function Settings() {
               </div>
               <p className="mt-1 text-xs text-ink-400">Shown on invoices, quotes and the customer portal. PNG/SVG, under 1.5 MB.</p>
             </div>
+          </div>
+        </div>
+
+        <div className={card}>
+          <h3 className="mb-4 font-semibold">Contact details</h3>
+          <p className="-mt-2 mb-4 text-xs text-ink-400">Shown in the header of your invoices, quotes and PDFs.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="text-sm font-medium">Phone<input value={form.companyPhone} onChange={update('companyPhone')} placeholder="+1 555 000 1234" className={input} /></label>
+            <label className="text-sm font-medium">Email<input type="email" value={form.companyEmail} onChange={update('companyEmail')} placeholder="billing@company.com" className={input} /></label>
+            <label className="col-span-2 text-sm font-medium">Website<input value={form.companyWebsite} onChange={update('companyWebsite')} placeholder="www.company.com" className={input} /></label>
           </div>
         </div>
 

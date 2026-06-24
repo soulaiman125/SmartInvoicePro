@@ -14,6 +14,8 @@ import emailRoutes from './email.routes.js';
 import portalRoutes from './portal.routes.js';
 import reportRoutes from './report.routes.js';
 import expenseRoutes from './expense.routes.js';
+import recurringRoutes from './recurring.routes.js';
+import auditRoutes from './audit.routes.js';
 
 const router = Router();
 
@@ -36,5 +38,7 @@ router.use('/emails', emailRoutes);
 router.use('/portal', portalRoutes);
 router.use('/reports', reportRoutes);
 router.use('/expenses', expenseRoutes);
+router.use('/recurring-invoices', recurringRoutes);
+router.use('/audit-logs', auditRoutes);
 
 export default router;

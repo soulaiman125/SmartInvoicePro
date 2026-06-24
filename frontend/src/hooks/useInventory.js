@@ -15,6 +15,13 @@ export function useLowStock() {
   });
 }
 
+export function useInventoryAnalytics() {
+  return useQuery({
+    queryKey: ['inventory', 'analytics'],
+    queryFn: inventoryService.analytics,
+  });
+}
+
 export function useAdjustStock() {
   const queryClient = useQueryClient();
   return useMutation({

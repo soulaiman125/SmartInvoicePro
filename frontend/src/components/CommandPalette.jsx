@@ -23,6 +23,8 @@ export default function CommandPalette() {
       { id: 'inventory', label: 'Go to Inventory', icon: 'inventory', run: () => navigate('/inventory') },
       { id: 'invoices', label: 'Go to Invoices', icon: 'invoices', run: () => navigate('/invoices') },
       { id: 'quotes', label: 'Go to Quotes', icon: 'quotes', run: () => navigate('/quotes') },
+      { id: 'recurring', label: 'Go to Recurring', icon: 'clock', run: () => navigate('/recurring') },
+      { id: 'audit', label: 'Go to Audit log', icon: 'inbox', run: () => navigate('/audit') },
       { id: 'settings', label: 'Go to Settings', icon: 'settings', run: () => navigate('/settings') },
       { id: 'new-invoice', label: 'Create new invoice', icon: 'plus', hint: 'Action', run: () => navigate('/invoices/new') },
       { id: 'new-quote', label: 'Create new quote', icon: 'plus', hint: 'Action', run: () => navigate('/quotes/new') },

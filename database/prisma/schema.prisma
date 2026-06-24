@@ -113,6 +113,7 @@ model Organization {
   emailLogs       EmailLog[]
   portalTokens    PortalToken[]
   expenses        Expense[]
+  recurringInvoices RecurringInvoice[]
 }
 
 model User {
@@ -196,6 +197,7 @@ model Client {
   invoices     Invoice[]
   quotes       Quote[]
   portalTokens PortalToken[]
+  recurringInvoices RecurringInvoice[]
 
   @@index([organizationId])
   @@index([organizationId, email])
@@ -547,6 +549,46 @@ model PortalToken {
   client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, clientId])
+}
+
+// ---------- Recurring invoices (Phase 8) ----------
+
+enum RecurringFrequency {
+  weekly
+  monthly
+  quarterly
+  yearly
+}
+
+enum RecurringStatus {
+  active
+  paused
+}
+
+model RecurringInvoice {
+  id             String             @id @default(uuid())
+  organizationId String
+  clientId       String
+  frequency      RecurringFrequency
+  status         RecurringStatus    @default(active)
+  currency       String             @default("USD")
+  items          Json // [{ productId?, description, quantity, unitPrice, taxRateBasisPoints, discountBasisPoints }]
+  notes          String?
+  footer         String?
+  dueInDays      Int                @default(30)
+  autoIssue      Boolean            @default(true)
+  startDate      DateTime           @db.Date
+  nextRunAt      DateTime           @db.Date
+  lastRunAt      DateTime?
+  occurrences    Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([status, nextRunAt])
 }
 
 // ---------- Expense management (Phase 6) ----------

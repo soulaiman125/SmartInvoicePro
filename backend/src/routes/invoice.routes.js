@@ -16,6 +16,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', invoiceController.list);
+router.post('/process-overdue', canWrite, invoiceController.processOverdue);
 router.get('/:id', validate(idParam), invoiceController.get);
 router.get('/:id/pdf', validate(idParam), invoiceController.pdf);
 router.post('/', canWrite, validate(createInvoiceSchema), invoiceController.create);

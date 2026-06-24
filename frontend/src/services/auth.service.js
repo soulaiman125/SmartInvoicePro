@@ -28,6 +28,23 @@ export async function logout() {
   clearTokens();
 }
 
+export async function getOrganizations() {
+  const { data } = await api.get('/auth/organizations');
+  return data;
+}
+
+export async function switchOrganization(organizationId) {
+  const { data } = await api.post('/auth/switch-organization', { organizationId });
+  setTokens(data);
+  return data;
+}
+
+export async function createOrganization(payload) {
+  const { data } = await api.post('/auth/organizations', payload);
+  setTokens(data);
+  return data;
+}
+
 export async function forgotPassword(email) {
   const { data } = await api.post('/auth/forgot-password', { email });
   return data;

@@ -50,6 +50,18 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // Switch to another organization: re-issues a scoped token, then hard-reloads
+  // so every cached query reloads against the new tenant.
+  const switchOrg = useCallback(async (organizationId) => {
+    await authService.switchOrganization(organizationId);
+    window.location.assign('/dashboard');
+  }, []);
+
+  const createOrg = useCallback(async (payload) => {
+    await authService.createOrganization(payload);
+    window.location.assign('/dashboard');
+  }, []);
+
   const value = {
     user,
     loading,
@@ -57,6 +69,8 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    switchOrg,
+    createOrg,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

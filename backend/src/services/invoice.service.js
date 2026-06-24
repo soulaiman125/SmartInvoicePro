@@ -197,3 +197,39 @@ export async function deleteInvoice(organizationId, id) {
   }
   await prisma.invoice.delete({ where: { id } });
 }
+
+// Marks open invoices past their due date as overdue and raises an alert for
+// each. Additive maintenance sweep — does not alter the issue/payment workflow.
+// `organizationId` optional: omit to sweep all tenants (scheduler).
+export async function processOverdueInvoices(organizationId = null) {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const where = {
+    status: { in: ['sent', 'viewed', 'partially_paid'] },
+    balanceDue: { gt: 0 },
+    dueDate: { lt: startOfToday },
+  };
+  if (organizationId) where.organizationId = organizationId;
+
+  const due = await prisma.invoice.findMany({ where });
+  let updated = 0;
+  for (const inv of due) {
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.invoice.update({ where: { id: inv.id }, data: { status: 'overdue' } });
+    updated += 1;
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      await notifyOrg(inv.organizationId, 'invoice_overdue', {
+        invoiceId: inv.id,
+        number: inv.number,
+        balanceDue: Number(inv.balanceDue),
+        currency: inv.currency,
+        dueDate: inv.dueDate,
+      });
+    } catch {
+      /* alerts are best-effort */
+    }
+  }
+  return { processed: due.length, updated };
+}

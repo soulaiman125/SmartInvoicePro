@@ -284,8 +284,42 @@ export async function financialReport(organizationId, query) {
   };
 }
 
+// ── Inventory valuation ──────────────────────────────────────────────────────
+export async function inventoryValuationReport(organizationId) {
+  const currency = await currencyFor(organizationId);
+  const products = await prisma.product.findMany({
+    where: { organizationId, trackInventory: true },
+    select: { name: true, sku: true, category: true, stockQuantity: true, unitPrice: true },
+    orderBy: { name: 'asc' },
+  });
+  const rows = products.map((p) => ({
+    name: p.name,
+    sku: p.sku || '',
+    category: p.category || '—',
+    stock: p.stockQuantity,
+    unitPrice: num(p.unitPrice),
+    value: p.stockQuantity * num(p.unitPrice),
+  }));
+  return {
+    key: 'inventory',
+    title: 'Inventory Valuation',
+    currency,
+    columns: [
+      { key: 'name', label: 'Product', type: 'text' },
+      { key: 'sku', label: 'SKU', type: 'text' },
+      { key: 'category', label: 'Category', type: 'text' },
+      { key: 'stock', label: 'In stock', type: 'number' },
+      { key: 'unitPrice', label: 'Unit price', type: 'money' },
+      { key: 'value', label: 'Stock value', type: 'money' },
+    ],
+    rows,
+    summary: [{ name: 'Total', sku: '', category: '', stock: rows.reduce((s, r) => s + r.stock, 0), unitPrice: '', value: rows.reduce((s, r) => s + r.value, 0) }],
+  };
+}
+
 export const REPORTS = {
   financial: financialReport,
+  inventory: inventoryValuationReport,
   revenue: revenueReport,
   clients: clientReport,
   products: productReport,

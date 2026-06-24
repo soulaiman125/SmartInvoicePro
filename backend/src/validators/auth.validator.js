@@ -43,3 +43,15 @@ export const updateProfileSchema = {
     })
     .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' }),
 };
+
+export const switchOrgSchema = {
+  body: z.object({ organizationId: z.string().uuid() }),
+};
+
+export const createOrgSchema = {
+  body: z.object({
+    name: z.string().min(1).max(120),
+    baseCurrency: z.string().length(3).toUpperCase().optional(),
+    countryCode: z.string().length(2).toUpperCase().optional(),
+  }),
+};

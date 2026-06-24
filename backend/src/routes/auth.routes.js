@@ -9,6 +9,8 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   updateProfileSchema,
+  switchOrgSchema,
+  createOrgSchema,
 } from '../validators/auth.validator.js';
 
 const router = Router();
@@ -23,5 +25,9 @@ router.post('/logout-all', authenticate, authController.logoutAll);
 
 router.get('/me', authenticate, authController.me);
 router.patch('/me', authenticate, validate(updateProfileSchema), authController.updateMe);
+
+router.get('/organizations', authenticate, authController.organizations);
+router.post('/organizations', authenticate, validate(createOrgSchema), authController.createOrganization);
+router.post('/switch-organization', authenticate, validate(switchOrgSchema), authController.switchOrganization);
 
 export default router;

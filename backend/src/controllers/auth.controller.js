@@ -50,3 +50,15 @@ export const updateMe = asyncHandler(async (req, res) => {
   const updated = await userService.updateProfile(req.user.id, req.body);
   res.json(updated);
 });
+
+export const organizations = asyncHandler(async (req, res) => {
+  res.json(await authService.listOrganizations(req.user.id));
+});
+
+export const switchOrganization = asyncHandler(async (req, res) => {
+  res.json(await authService.switchOrganization(req.user.id, req.body.organizationId));
+});
+
+export const createOrganization = asyncHandler(async (req, res) => {
+  res.status(201).json(await authService.createOrganization(req.user.id, req.body));
+});

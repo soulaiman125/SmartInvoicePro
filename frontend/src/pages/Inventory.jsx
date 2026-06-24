@@ -1,21 +1,35 @@
 import { useState } from 'react';
-import { useMovements, useLowStock } from '../hooks/useInventory.js';
+import { useMovements, useLowStock, useInventoryAnalytics } from '../hooks/useInventory.js';
 import { useProducts } from '../hooks/useProducts.js';
 import StockAdjustModal from '../components/StockAdjustModal.jsx';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/ui/Button.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
+import { formatMoney } from '../utils/money.js';
 
 const card = 'overflow-hidden rounded-2xl border border-ink-200/80 bg-white shadow-card dark:border-ink-800 dark:bg-ink-900';
 
 const MOVEMENT_COLOR = { in: 'green', out: 'red', adjustment: 'amber' };
+
+function StatCard({ label, value, icon, tone = 'text-brand-600 dark:text-brand-300' }) {
+  return (
+    <div className="rounded-2xl border border-ink-200/80 bg-white p-4 shadow-card dark:border-ink-800 dark:bg-ink-900">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-ink-500">{label}</p>
+        <Icon name={icon} className={`h-4 w-4 ${tone}`} />
+      </div>
+      <p className="mt-1.5 text-xl font-bold tabular-nums text-ink-900 dark:text-white">{value}</p>
+    </div>
+  );
+}
 
 export default function Inventory() {
   const [adjusting, setAdjusting] = useState(false);
   const { data: lowStock = [] } = useLowStock();
   const { data: movements } = useMovements({ pageSize: 20 });
   const { data: productsPage } = useProducts({ pageSize: 100 });
+  const { data: analytics } = useInventoryAnalytics();
 
   const tracked = (productsPage?.data ?? []).filter((p) => p.trackInventory);
   const logs = movements?.data ?? [];
@@ -28,6 +42,15 @@ export default function Inventory() {
           <Icon name="inventory" className="h-4 w-4" /> Adjust stock
         </Button>
       </PageHeader>
+
+      {analytics && (
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard label="Stock valuation" value={formatMoney(analytics.totalValue)} icon="revenue" tone="text-emerald-600 dark:text-emerald-400" />
+          <StatCard label="Units in stock" value={analytics.totalUnits.toLocaleString()} icon="inventory" />
+          <StatCard label="Tracked products" value={analytics.productCount} icon="products" tone="text-accent-600 dark:text-accent-400" />
+          <StatCard label="Low-stock items" value={analytics.lowStock} icon="alert" tone={analytics.lowStock > 0 ? 'text-red-500' : 'text-ink-400'} />
+        </div>
+      )}
 
       {lowStock.length > 0 && (
         <div className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">

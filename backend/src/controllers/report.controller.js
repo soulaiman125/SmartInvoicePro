@@ -11,6 +11,7 @@ const AVAILABLE = [
   { key: 'products', title: 'Product Performance', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: false },
   { key: 'outstanding', title: 'Outstanding Invoices', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: false },
   { key: 'payments', title: 'Payments Report', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: true },
+  { key: 'inventory', title: 'Inventory Valuation', formats: ['json', 'csv', 'xlsx', 'pdf'], dateRange: false },
 ];
 
 export const catalog = asyncHandler(async (req, res) => {

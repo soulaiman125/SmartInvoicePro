@@ -11,6 +11,7 @@ router.use(authenticate);
 
 router.get('/movements', inventoryController.allMovements);
 router.get('/low-stock', inventoryController.lowStock);
+router.get('/analytics', inventoryController.analytics);
 router.get(
   '/products/:productId/movements',
   validate(productIdParam),

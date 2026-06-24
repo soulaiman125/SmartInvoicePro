@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import NotificationBell from './NotificationBell.jsx';
+import OrgSwitcher from './OrgSwitcher.jsx';
 import CommandPalette from './CommandPalette.jsx';
 import Icon from './ui/Icon.jsx';
 import BrandLogo from './brand/BrandLogo.jsx';
@@ -28,6 +29,7 @@ const NAV = [
     items: [
       { to: '/invoices', label: 'Invoices', icon: 'invoices' },
       { to: '/quotes', label: 'Quotes', icon: 'quotes' },
+      { to: '/recurring', label: 'Recurring', icon: 'clock' },
       { to: '/payments', label: 'Payments', icon: 'payments' },
       { to: '/expenses', label: 'Expenses', icon: 'wallet' },
       { to: '/reports', label: 'Reports', icon: 'bar-chart' },
@@ -35,7 +37,10 @@ const NAV = [
   },
   {
     section: 'System',
-    items: [{ to: '/settings', label: 'Settings', icon: 'settings' }],
+    items: [
+      { to: '/audit', label: 'Audit log', icon: 'inbox' },
+      { to: '/settings', label: 'Settings', icon: 'settings' },
+    ],
   },
 ];
 
@@ -191,6 +196,7 @@ export default function Layout() {
         className="sticky top-0 hidden h-screen flex-col border-r border-ink-200/80 bg-white/95 p-3 backdrop-blur-xl dark:border-ink-800/80 dark:bg-ink-900/80 md:flex"
       >
         <Brand collapsed={collapsed} onToggle={toggleCollapsed} />
+        {!collapsed && <OrgSwitcher />}
         <NavGroups collapsed={collapsed} />
         <UserFooter collapsed={collapsed} />
       </motion.aside>
@@ -224,6 +230,7 @@ export default function Layout() {
                   <Icon name="close" className="h-5 w-5" />
                 </button>
               </div>
+              <OrgSwitcher />
               <NavGroups onNavigate={() => setMobileOpen(false)} />
               <UserFooter />
             </motion.aside>

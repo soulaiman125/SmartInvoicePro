@@ -25,6 +25,19 @@
     <link rel="preconnect" href="https://rsms.me/" crossorigin />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <title>SmartInvoice Pro — Modern Invoicing & Business Management</title>
+
+    <!-- Apply the theme before first paint to avoid a flash / layout shift. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.classList.toggle('dark', t === 'dark');
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -6,6 +6,7 @@ import './utils/serializer.js'; // enable BigInt JSON serialization
 import { env } from './config/env.js';
 import routes from './routes/index.js';
 import { apiLimiter, authLimiter } from './middleware/rateLimit.middleware.js';
+import { auditLogger } from './middleware/audit.middleware.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -23,6 +24,9 @@ if (!env.isTest) {
   app.use('/api/v1/auth', authLimiter);
   app.use('/api/v1', apiLimiter);
 }
+
+// Audit every successful authenticated mutation (best-effort, on response finish).
+app.use(auditLogger);
 
 // API routes (versioned)
 app.use('/api/v1', routes);

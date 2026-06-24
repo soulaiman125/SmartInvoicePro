@@ -10,6 +10,8 @@ export function notificationMessage(n) {
       return `Invoice ${p.number || ''} issued`;
     case 'low_stock':
       return `Low stock: ${p.name} (${p.stock} left)`;
+    case 'invoice_overdue':
+      return `Invoice ${p.number || ''} is overdue — ${formatMoney(p.balanceDue, p.currency)} due`;
     default:
       return n.type.replace(/_/g, ' ');
   }

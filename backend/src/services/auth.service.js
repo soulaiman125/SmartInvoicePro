@@ -232,3 +232,58 @@ export async function getProfile(userId, organizationId) {
     organizationId,
   };
 }
+
+// ---- Multi-organization support (Phase 15) ----
+
+// Every organization the user actively belongs to.
+export async function listOrganizations(userId) {
+  const memberships = await prisma.membership.findMany({
+    where: { userId, status: 'active' },
+    include: { organization: { select: { id: true, name: true, baseCurrency: true, logoUrl: true } } },
+    orderBy: { createdAt: 'asc' },
+  });
+  return memberships
+    .filter((m) => m.organization)
+    .map((m) => ({
+      organizationId: m.organizationId,
+      role: m.role,
+      name: m.organization.name,
+      baseCurrency: m.organization.baseCurrency,
+      logoUrl: m.organization.logoUrl,
+    }));
+}
+
+// Issues a fresh token pair scoped to another organization the user belongs to.
+export async function switchOrganization(userId, organizationId) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.unauthorized();
+
+  const membership = await prisma.membership.findFirst({
+    where: { userId, organizationId, status: 'active' },
+  });
+  if (!membership) throw ApiError.forbidden('You are not a member of that organization');
+
+  const tokens = buildTokens(user, membership);
+  await persistRefreshToken(user.id, tokens.refreshToken);
+  return { user: publicUser(user), organizationId, role: membership.role, ...tokens };
+}
+
+// Creates a new organization owned by the user and returns tokens scoped to it.
+export async function createOrganization(userId, { name, baseCurrency, countryCode }) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.unauthorized();
+
+  const { organization, membership } = await prisma.$transaction(async (tx) => {
+    const created = await tx.organization.create({
+      data: { name, baseCurrency: baseCurrency || 'USD', countryCode: countryCode || null },
+    });
+    const member = await tx.membership.create({
+      data: { organizationId: created.id, userId, role: 'owner', status: 'active' },
+    });
+    return { organization: created, membership: member };
+  });
+
+  const tokens = buildTokens(user, membership);
+  await persistRefreshToken(user.id, tokens.refreshToken);
+  return { user: publicUser(user), organizationId: organization.id, name: organization.name, role: 'owner', ...tokens };
+}

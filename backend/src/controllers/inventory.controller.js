@@ -27,3 +27,7 @@ export const allMovements = asyncHandler(async (req, res) => {
 export const lowStock = asyncHandler(async (req, res) => {
   res.json(await inventoryService.lowStockReport(req.user.organizationId));
 });
+
+export const analytics = asyncHandler(async (req, res) => {
+  res.json(await inventoryService.inventoryAnalytics(req.user.organizationId));
+});

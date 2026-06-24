@@ -34,6 +34,10 @@ export const remove = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
+export const processOverdue = asyncHandler(async (req, res) => {
+  res.json(await invoiceService.processOverdueInvoices(req.user.organizationId));
+});
+
 export const pdf = asyncHandler(async (req, res) => {
   const invoice = await invoiceService.getInvoice(req.user.organizationId, req.params.id);
   const org = await settingsService.getSettings(req.user.organizationId);
