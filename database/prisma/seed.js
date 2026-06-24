@@ -81,6 +81,7 @@ async function cleanOrg() {
   await prisma.client.deleteMany({ where: org });
   await prisma.subscription.deleteMany({ where: org });
   await prisma.expense.deleteMany({ where: org });
+  await prisma.recurringInvoice.deleteMany({ where: org });
 }
 
 async function main() {
@@ -558,6 +559,38 @@ async function main() {
     }
   }
   await prisma.expense.createMany({ data: expenseRows });
+
+  // ---- Recurring invoice schedules ----
+  // nextRunAt is set in the future so they appear as upcoming on the Recurring
+  // page without auto-generating invoices on seed.
+  const dayMs = 86400000;
+  const RECURRING = [
+    { clientIdx: 7, frequency: 'monthly', dueInDays: 30, status: 'active', nextInDays: 8, occurrences: 6, items: [{ description: 'Monthly marketing retainer', quantity: 1, unitPrice: 200000, taxRateBasisPoints: 1000, discountBasisPoints: 0 }] },
+    { clientIdx: 0, frequency: 'weekly', dueInDays: 14, status: 'active', nextInDays: 3, occurrences: 18, items: [{ description: 'Managed support (5 hrs/week)', quantity: 5, unitPrice: 11000, taxRateBasisPoints: 0, discountBasisPoints: 0 }] },
+    { clientIdx: 5, frequency: 'quarterly', dueInDays: 30, status: 'active', nextInDays: 26, occurrences: 3, items: [{ description: 'Cloud hosting (quarterly)', quantity: 3, unitPrice: 9900, taxRateBasisPoints: 1000, discountBasisPoints: 0 }, { description: 'Priority SLA', quantity: 1, unitPrice: 45000, taxRateBasisPoints: 1000, discountBasisPoints: 0 }] },
+    { clientIdx: 12, frequency: 'yearly', dueInDays: 45, status: 'paused', nextInDays: 120, occurrences: 1, items: [{ description: 'Annual maintenance & licensing', quantity: 1, unitPrice: 600000, taxRateBasisPoints: 1000, discountBasisPoints: 0 }] },
+  ];
+  for (const r of RECURRING) {
+    const nextRunAt = new Date(Date.now() + r.nextInDays * dayMs);
+    nextRunAt.setHours(0, 0, 0, 0);
+    const startDate = dateMonthsAgo(r.occurrences + 1, 1, 0);
+    await prisma.recurringInvoice.create({
+      data: {
+        organizationId: org.id,
+        clientId: clientRecords[r.clientIdx].id,
+        frequency: r.frequency,
+        status: r.status,
+        currency: 'USD',
+        items: r.items,
+        dueInDays: r.dueInDays,
+        autoIssue: true,
+        startDate,
+        nextRunAt,
+        lastRunAt: r.occurrences > 0 ? new Date(Date.now() - r.nextInDays * dayMs) : null,
+        occurrences: r.occurrences,
+      },
+    });
+  }
 
   // ---- Persist notifications + audit logs ----
   await prisma.notification.createMany({ data: notifications });
